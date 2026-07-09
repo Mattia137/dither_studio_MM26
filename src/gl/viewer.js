@@ -146,9 +146,19 @@ export function createViewer(canvasEl, viewportEl) {
     imageWidth = bitmap.width;
     imageHeight = bitmap.height;
 
+    // Draw ImageBitmap onto a Canvas first: WebGL's UNPACK_FLIP_Y_WEBGL is
+    // ignored for ImageBitmap sources, so Three.js flipY has no effect when
+    // using ImageBitmap directly as a texture. Drawing onto a Canvas gives us
+    // a source where flipY works reliably.
+    const srcCanvas = document.createElement('canvas');
+    srcCanvas.width = imageWidth;
+    srcCanvas.height = imageHeight;
+    const srcCtx = srcCanvas.getContext('2d');
+    srcCtx.drawImage(bitmap, 0, 0);
+
     if (sourceTexture) sourceTexture.dispose();
-    sourceTexture = new THREE.Texture(bitmap);
-    sourceTexture.flipY = false;
+    sourceTexture = new THREE.CanvasTexture(srcCanvas);
+    sourceTexture.flipY = true;
     sourceTexture.generateMipmaps = false;
     sourceTexture.wrapS = THREE.ClampToEdgeWrapping;
     sourceTexture.wrapT = THREE.ClampToEdgeWrapping;
@@ -191,7 +201,7 @@ export function createViewer(canvasEl, viewportEl) {
     const blurredCanvas = blurBitmap(sourceBitmap, radius, imageWidth, imageHeight);
     if (blurTexture) blurTexture.dispose();
     blurTexture = new THREE.CanvasTexture(blurredCanvas);
-    blurTexture.flipY = false;
+    blurTexture.flipY = true;
     blurTexture.generateMipmaps = false;
     blurTexture.wrapS = THREE.ClampToEdgeWrapping;
     blurTexture.wrapT = THREE.ClampToEdgeWrapping;
