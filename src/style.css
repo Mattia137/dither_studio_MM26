@@ -1,0 +1,560 @@
+:root {
+  --bg: #1a1a1c;
+  --panel: #202024;
+  --canvas-bg: #0d0d0f;
+  --row: #2a2a2f;
+  --row-hi: #33333a;
+  --fill: #3a4a63;
+  --text: #e6e6e6;
+  --text-dim: #8a8a90;
+  --text-faint: #5a5a60;
+  --line: #303036;
+  --accent: #4a9eff;
+  --warn: #e0a020;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11px;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.panel {
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#panel-left {
+  border-right: 1px solid var(--line);
+}
+
+#panel-right {
+  border-left: 1px solid var(--line);
+}
+
+/* ---- Tabs (left panel) ---- */
+.tab-strip {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 8px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.tab:hover:not(.active) {
+  color: var(--text);
+}
+
+.tab-panel {
+  display: none;
+  flex-direction: column;
+  padding: 10px;
+  gap: 10px;
+}
+
+.tab-panel.active {
+  display: flex;
+}
+
+.import-toolbar {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  background: var(--row);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.icon-btn:hover {
+  background: var(--row-hi);
+  color: var(--text);
+}
+
+.thumb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.thumb-cell {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.thumb-cell .thumb-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--canvas-bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-cell.selected .thumb-img {
+  border-color: var(--accent);
+}
+
+.thumb-cell .thumb-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.thumb-empty {
+  grid-column: 1 / -1;
+  color: var(--text-faint);
+  font-size: 10px;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--row);
+  border-radius: 3px;
+  padding: 6px 8px;
+}
+
+.preset-row .preset-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-row .preset-actions button {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.preset-row .preset-actions button:hover {
+  color: var(--text);
+}
+
+/* ---- Canvas area ---- */
+#canvas-area {
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas-bg);
+  overflow: hidden;
+}
+
+#canvas-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#viewer-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+#drop-hint {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  pointer-events: none;
+  border: 1px dashed var(--line);
+  margin: 12px;
+}
+
+#canvas-viewport.drag-over #drop-hint {
+  display: flex;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#status-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+#status-name {
+  color: var(--text);
+}
+
+/* ---- Right panel ---- */
+.mode-switch {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 8px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  color: var(--text);
+  background: var(--row);
+}
+
+.mode-btn:hover:not(.active) {
+  color: var(--text);
+}
+
+#right-panel-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.prop-group {
+  border-bottom: 1px solid var(--line);
+}
+
+.prop-group-header {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.prop-group-header:hover {
+  color: var(--text);
+}
+
+.prop-group.collapsed .prop-group-body {
+  display: none;
+}
+
+.prop-group-body {
+  padding: 4px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readout {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+/* ---- Control factories (ui/controls.js) ---- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.slider-track {
+  position: relative;
+  height: 22px;
+  background: var(--row);
+  border-radius: 3px;
+  cursor: ew-resize;
+  overflow: hidden;
+  user-select: none;
+}
+
+.slider-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: var(--fill);
+  pointer-events: none;
+}
+
+.slider-value {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.slider-value input {
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  text-align: center;
+  width: 100%;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sliders (unlike plain numberFields) also drag-to-scrub the track behind the
+   input, so the input itself must stay narrow — a full-width input would
+   intercept every pointerdown and defeat dragging everywhere on the track. */
+.slider-value input.slider-num-input {
+  width: 4.5em;
+  pointer-events: auto;
+}
+
+.slider-value input:focus {
+  outline: 1px solid var(--accent);
+}
+
+select.dd {
+  width: 100%;
+  height: 22px;
+  background: var(--row);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 0 6px;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position: calc(100% - 12px) center, calc(100% - 8px) center;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+select.dd:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle {
+  width: 30px;
+  height: 16px;
+  background: var(--row);
+  border-radius: 8px;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--line);
+}
+
+.toggle.on {
+  background: var(--fill);
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  top: 1px;
+  left: 1px;
+  transition: left 0.1s;
+}
+
+.toggle.on::after {
+  left: 15px;
+  background: var(--accent);
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-row input[type="color"] {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--row);
+  cursor: pointer;
+}
+
+.color-row .color-hex {
+  flex: 1;
+  background: var(--row);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 3px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn {
+  background: var(--row);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.btn:hover {
+  background: var(--row-hi);
+}
+
+.btn.accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tag-cpu {
+  color: var(--warn);
+  font-size: 9px;
+  border: 1px solid var(--warn);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  letter-spacing: 0.3px;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--row);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s;
+}
+
+.section-note {
+  color: var(--text-faint);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+  margin: 2px 0;
+}
+
+.parity-result {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.parity-result.pass {
+  color: var(--accent);
+}
+
+.parity-result.fail {
+  color: var(--warn);
+}
+
+.diff-canvas {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  image-rendering: pixelated;
+  display: none;
+}
+
+.diff-canvas.visible {
+  display: block;
+}

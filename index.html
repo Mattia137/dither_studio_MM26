@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dither Lab</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="panel-left" class="panel">
+      <div class="tab-strip">
+        <button class="tab active" data-tab="import">IMPORT</button>
+        <button class="tab" data-tab="projects">PROJECTS</button>
+      </div>
+
+      <div class="tab-panel active" data-tab-panel="import">
+        <div class="import-toolbar">
+          <button id="btn-refresh-input" class="icon-btn" title="Refresh input list">&#8635;</button>
+          <button id="btn-load-file" class="icon-btn" title="Load a file from disk">&#8593;</button>
+        </div>
+        <div id="thumb-grid" class="thumb-grid"></div>
+      </div>
+
+      <div class="tab-panel" data-tab-panel="projects">
+        <div class="import-toolbar">
+          <button id="btn-save-preset" class="icon-btn" title="Save current state as preset">+ SAVE</button>
+        </div>
+        <div id="preset-list" class="preset-list"></div>
+      </div>
+    </aside>
+
+    <main id="canvas-area">
+      <div id="canvas-viewport">
+        <canvas id="viewer-canvas"></canvas>
+        <div id="drop-hint">Drop an image here</div>
+      </div>
+      <div id="status-bar">
+        <span id="status-name">&mdash;</span>
+        <span id="status-dims">&mdash;</span>
+        <span id="status-zoom">100%</span>
+        <span id="status-lum">lum &mdash;</span>
+        <span id="status-mode">ZONES</span>
+      </div>
+    </main>
+
+    <aside id="panel-right" class="panel">
+      <div class="mode-switch" id="mode-switch">
+        <button class="mode-btn active" data-mode="zones">ZONES</button>
+        <button class="mode-btn" data-mode="layers">LAYERS</button>
+      </div>
+
+      <div id="right-panel-body">
+        <section class="prop-group" data-group="image">
+          <header class="prop-group-header">IMAGE</header>
+          <div class="prop-group-body">
+            <div class="readout" id="image-readout">No image loaded</div>
+          </div>
+        </section>
+
+        <section class="prop-group" data-group="adjust">
+          <header class="prop-group-header">ADJUST</header>
+          <div class="prop-group-body" id="adjust-body"></div>
+        </section>
+
+        <section class="prop-group" data-group="composition">
+          <header class="prop-group-header" id="composition-header">ZONES</header>
+          <div class="prop-group-body" id="composition-body"></div>
+        </section>
+
+        <section class="prop-group" data-group="duotone">
+          <header class="prop-group-header">DUOTONE</header>
+          <div class="prop-group-body" id="duotone-body"></div>
+        </section>
+
+        <section class="prop-group" data-group="export">
+          <header class="prop-group-header">EXPORT</header>
+          <div class="prop-group-body" id="export-body"></div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
