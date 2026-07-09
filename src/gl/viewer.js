@@ -148,7 +148,7 @@ export function createViewer(canvasEl, viewportEl) {
 
     if (sourceTexture) sourceTexture.dispose();
     sourceTexture = new THREE.Texture(bitmap);
-    sourceTexture.flipY = true;
+    sourceTexture.flipY = false;
     sourceTexture.generateMipmaps = false;
     sourceTexture.wrapS = THREE.ClampToEdgeWrapping;
     sourceTexture.wrapT = THREE.ClampToEdgeWrapping;
@@ -191,7 +191,7 @@ export function createViewer(canvasEl, viewportEl) {
     const blurredCanvas = blurBitmap(sourceBitmap, radius, imageWidth, imageHeight);
     if (blurTexture) blurTexture.dispose();
     blurTexture = new THREE.CanvasTexture(blurredCanvas);
-    blurTexture.flipY = true;
+    blurTexture.flipY = false;
     blurTexture.generateMipmaps = false;
     blurTexture.wrapS = THREE.ClampToEdgeWrapping;
     blurTexture.wrapT = THREE.ClampToEdgeWrapping;
