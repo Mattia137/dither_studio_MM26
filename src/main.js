@@ -5,9 +5,30 @@ import { createViewer } from './gl/viewer.js';
 import { slider, toggle, dropdown, button } from './ui/controls.js';
 import { luminance, applyPreAdjust, computeAdjustedLuminanceBuffer } from './cpu/prepare.js';
 import { orderedDither, orderedDitherCells } from './cpu/ordered.js';
+import { halftoneDither, halftoneDots } from './cpu/halftone.js';
+import { linescreenDither, linescreenStrips } from './cpu/linescreen.js';
 import { countOrderedSvgElements } from './export/svg.js';
 import { defaultParamsFor } from './effects.js';
 import { renderEffectParams } from './ui/effectparams.js';
+
+/** CPU ink raster for the given effect — mirrors gl/shader.js's evalEffect() dispatch, used by the dev parity check. */
+function computeCpuInk(effect, lumBuffer, width, height, params) {
+  if (effect === 'ordered') return orderedDither(lumBuffer, width, height, params);
+  if (effect === 'halftone') return halftoneDither(lumBuffer, width, height, params);
+  if (effect === 'linescreen') return linescreenDither(lumBuffer, width, height, params);
+  return Uint8Array.from(lumBuffer, (l) => (l < 0.5 ? 1 : 0));
+}
+
+/** SVG element-count estimate for the given effect, or null if not yet supported for SVG. */
+function computeSvgElementCount(effect, lumBuffer, width, height, params) {
+  if (effect === 'ordered') {
+    const { ink, cellsWide, cellsHigh } = orderedDitherCells(lumBuffer, width, height, params);
+    return countOrderedSvgElements(ink, cellsWide, cellsHigh);
+  }
+  if (effect === 'halftone') return halftoneDots(lumBuffer, width, height, params).length;
+  if (effect === 'linescreen') return linescreenStrips(lumBuffer, width, height, params).length;
+  return null;
+}
 
 const thumbGrid = document.getElementById('thumb-grid');
 const canvas = document.getElementById('viewer-canvas');
@@ -245,6 +266,8 @@ const effectDropdown = dropdown({
   options: [
     { value: 'none', label: 'None' },
     { value: 'ordered', label: 'Ordered Dither' },
+    { value: 'halftone', label: 'Halftone Dots' },
+    { value: 'linescreen', label: 'Line Screen' },
   ],
   value: currentEffectUnit().effect,
   onChange: (effectId) => {
@@ -381,13 +404,12 @@ function updateElementEstimate() {
     return;
   }
   const unit = currentEffectUnit();
-  if (unit.effect !== 'ordered') {
-    elementEstimate.textContent = 'SVG element estimate is available for Ordered Dither only right now.';
+  const lumBuffer = computeAdjustedLuminanceBuffer(image.bitmap, get('pre'), image.width, image.height);
+  const count = computeSvgElementCount(unit.effect, lumBuffer, image.width, image.height, unit.params);
+  if (count === null) {
+    elementEstimate.textContent = 'SVG export is not available for this effect yet.';
     return;
   }
-  const lumBuffer = computeAdjustedLuminanceBuffer(image.bitmap, get('pre'), image.width, image.height);
-  const { ink, cellsWide, cellsHigh } = orderedDitherCells(lumBuffer, image.width, image.height, unit.params);
-  const count = countOrderedSvgElements(ink, cellsWide, cellsHigh);
   const over = count > SVG_WARN_THRESHOLD;
   elementEstimate.textContent = `~${count.toLocaleString()} SVG elements${over ? ' — warning: very large, consider PNG/BMP' : ''}`;
   elementEstimate.style.color = over ? 'var(--warn)' : '';
@@ -471,10 +493,7 @@ function runParityCheck() {
   const { width, height } = image;
 
   const lumBuffer = computeAdjustedLuminanceBuffer(image.bitmap, get('pre'), width, height);
-  const cpuInk =
-    unit.effect === 'ordered'
-      ? orderedDither(lumBuffer, width, height, unit.params)
-      : Uint8Array.from(lumBuffer, (l) => (l < 0.5 ? 1 : 0));
+  const cpuInk = computeCpuInk(unit.effect, lumBuffer, width, height, unit.params);
 
   const gpuPixels = viewer.renderToPixels();
   if (!gpuPixels) return;

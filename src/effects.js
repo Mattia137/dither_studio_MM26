@@ -25,6 +25,39 @@ export const EFFECTS = {
       { key: 'jitter', type: 'slider', label: 'Jitter', min: 0, max: 1, step: 0.01, format: (v) => v.toFixed(2) },
     ],
   },
+  halftone: {
+    id: 'halftone',
+    label: 'Halftone Dots',
+    defaultParams: { pitch: 8, angle: 45, dotGain: 1, shape: 'round', maxOverlap: false },
+    params: [
+      { key: 'pitch', type: 'slider', label: 'Pitch', min: 2, max: 64, step: 1, format: (v) => `${v}px` },
+      { key: 'angle', type: 'slider', label: 'Angle', min: 0, max: 90, step: 1, format: (v) => `${v}°` },
+      { key: 'dotGain', type: 'slider', label: 'Dot Gain', min: 0.5, max: 1.5, step: 0.01, format: (v) => v.toFixed(2) },
+      {
+        key: 'shape',
+        type: 'dropdown',
+        label: 'Dot Shape',
+        options: [
+          { value: 'round', label: 'Round' },
+          { value: 'square', label: 'Square' },
+          { value: 'diamond', label: 'Diamond' },
+        ],
+      },
+      { key: 'maxOverlap', type: 'toggle', label: 'Max Overlap' },
+    ],
+  },
+  linescreen: {
+    id: 'linescreen',
+    label: 'Line Screen',
+    defaultParams: { pitch: 8, angle: 0, weight: 1, smoothing: 8, phase: 0 },
+    params: [
+      { key: 'pitch', type: 'slider', label: 'Pitch', min: 2, max: 64, step: 1, format: (v) => `${v}px` },
+      { key: 'angle', type: 'slider', label: 'Angle', min: 0, max: 90, step: 1, format: (v) => `${v}°` },
+      { key: 'weight', type: 'slider', label: 'Weight', min: 0.5, max: 1.5, step: 0.01, format: (v) => v.toFixed(2) },
+      { key: 'smoothing', type: 'slider', label: 'Smoothing', min: 0, max: 32, step: 0.5, format: (v) => `${v.toFixed(1)}px` },
+      { key: 'phase', type: 'slider', label: 'Phase', min: 0, max: 1, step: 0.01, format: (v) => v.toFixed(2) },
+    ],
+  },
 };
 
 export function getEffect(id) {

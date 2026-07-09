@@ -1,7 +1,7 @@
 // Renders one effect's param block from its effects.js schema. Reused
 // verbatim by Zones (Phase 5) and Layers (Phase 6) UIs — write it once.
 import { getEffect } from '../effects.js';
-import { slider, dropdown } from './controls.js';
+import { slider, dropdown, toggle } from './controls.js';
 
 /**
  * @param {HTMLElement} container emptied and (re)filled with this effect's controls
@@ -31,6 +31,12 @@ export function renderEffectParams(container, effectId, params, onParamChange) {
       control = dropdown({
         label: spec.label,
         options: spec.options,
+        value,
+        onChange: (v) => onParamChange(spec.key, v),
+      });
+    } else if (spec.type === 'toggle') {
+      control = toggle({
+        label: spec.label,
         value,
         onChange: (v) => onParamChange(spec.key, v),
       });

@@ -11,7 +11,8 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 32;
 const NEAREST_ZOOM_THRESHOLD = 4;
 
-const EFFECT_TYPE_ID = { none: 0, ordered: 1 };
+const EFFECT_TYPE_ID = { none: 0, ordered: 1, halftone: 2, linescreen: 3 };
+const HALFTONE_SHAPE_ID = { round: 0, square: 1, diamond: 2 };
 
 function buildMatrixAtlas() {
   let totalCells = 0;
@@ -40,6 +41,12 @@ export function packEffectUniforms(effect, params) {
   const paramsB = new THREE.Vector4(0, 0, 0, 0);
   if (effect === 'ordered') {
     paramsA.set(matrixIndexById(params.matrix), params.cell, params.jitter, 0);
+  } else if (effect === 'halftone') {
+    paramsA.set(params.pitch, params.angle, params.dotGain, HALFTONE_SHAPE_ID[params.shape] ?? 0);
+    paramsB.set(params.maxOverlap ? 1 : 0, 0, 0, 0);
+  } else if (effect === 'linescreen') {
+    paramsA.set(params.pitch, params.angle, params.weight, params.smoothing);
+    paramsB.set(params.phase, 0, 0, 0);
   }
   return { type, paramsA, paramsB };
 }
@@ -146,18 +153,8 @@ export function createViewer(canvasEl, viewportEl) {
     imageWidth = bitmap.width;
     imageHeight = bitmap.height;
 
-    // Draw ImageBitmap onto a Canvas first: WebGL's UNPACK_FLIP_Y_WEBGL is
-    // ignored for ImageBitmap sources, so Three.js flipY has no effect when
-    // using ImageBitmap directly as a texture. Drawing onto a Canvas gives us
-    // a source where flipY works reliably.
-    const srcCanvas = document.createElement('canvas');
-    srcCanvas.width = imageWidth;
-    srcCanvas.height = imageHeight;
-    const srcCtx = srcCanvas.getContext('2d');
-    srcCtx.drawImage(bitmap, 0, 0);
-
     if (sourceTexture) sourceTexture.dispose();
-    sourceTexture = new THREE.CanvasTexture(srcCanvas);
+    sourceTexture = new THREE.Texture(bitmap);
     sourceTexture.flipY = true;
     sourceTexture.generateMipmaps = false;
     sourceTexture.wrapS = THREE.ClampToEdgeWrapping;
